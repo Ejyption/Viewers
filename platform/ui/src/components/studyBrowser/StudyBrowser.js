@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { Thumbnail } from './Thumbnail.js';
 import './StudyBrowser.styl';
@@ -6,10 +6,21 @@ import './StudyBrowser.styl';
 function StudyBrowser(props) {
   const {
     studies,
+    viewports,
     onThumbnailClick,
     onThumbnailDoubleClick,
     supportsDrag,
   } = props;
+
+  const allActiveUIDs = useMemo(() => {
+    let activeUIDs = [];
+    let keys = Object.keys(viewports.viewportSpecificData);
+    for (let i = 0; i < keys.length; i++) {
+      let a = viewports.viewportSpecificData[keys[i]].displaySetInstanceUID;
+      activeUIDs.push(a);
+    }
+    return activeUIDs;
+  }, [viewports]);
 
   return (
     <div className="study-browser">
@@ -28,7 +39,6 @@ function StudyBrowser(props) {
                 SeriesDescription,
                 SeriesNumber,
                 stackPercentComplete,
-                active,
               } = thumb;
 
               return (
@@ -38,7 +48,7 @@ function StudyBrowser(props) {
                   data-cy="thumbnail-list"
                 >
                   <Thumbnail
-                    active={active}
+                    active={!!~allActiveUIDs.indexOf(displaySetInstanceUID)}
                     supportsDrag={supportsDrag}
                     key={`${studyIndex}_${thumbIndex}`}
                     id={`${studyIndex}_${thumbIndex}`} // Unused?
@@ -90,6 +100,13 @@ StudyBrowser.propTypes = {
       ),
     })
   ).isRequired,
+  viewports: PropTypes.shape({
+    activeViewportIndex: PropTypes.number,
+    layout: PropTypes.object,
+    numColumns: PropTypes.number,
+    numRows: PropTypes.number,
+    viewportSpecificData: PropTypes.object,
+  }),
   supportsDrag: PropTypes.bool,
   onThumbnailClick: PropTypes.func,
   onThumbnailDoubleClick: PropTypes.func,
